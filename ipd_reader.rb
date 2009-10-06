@@ -1,3 +1,5 @@
+require 'ipd/bookmark'
+
 identifier = 'Inter@ctive Pager Backup/Restore File'
 
 ipd = File.new(ARGV[0])
@@ -36,6 +38,7 @@ def get_network_four(x)
 end
 
 mms = 0
+begin
 loop do
 	pos = ipd.sysread(2).unpack('S')[0]
 	db_l = get_network_four(ipd).to_i
@@ -44,28 +47,34 @@ loop do
 	if pos == 26 then
 #	puts "block is [#{pos}] = #{databases[pos]}, length=#{db_l}, version=#{db_v} id=#{db_id}"
 	end
+    dbname = databases[pos]
 
     s_bn = ''
 	while fields.length > 0 do
 		f_l, f_t, fields = fields.unpack('SCa*')
 		f_d, fields = fields.unpack("a#{f_l}a*")
-		puts "#{databases[pos]} #{f_t}"
-        if pos == 85 then
-            if f_t == 17 then # bookmark name
-                bits = f_d[0..7]
-                rest = f_d[8..-1]
-#                puts "type of bookmark: #{bits[0]}"
-                if bits[0] & 0x40 == 0x40 then 
-                    rest = f_d[7..-1]
-                end
-                l_bn = rest[0..1].unpack('n')[0]
-                s_bn = rest[2..1+l_bn]
-#                puts "#{l_bn} => #{s_bn}"
-            elsif f_t == 18 then # bookmark URL
-                l_bn = f_d[0..1].unpack('n')[0]
-                s_bu = f_d[2..1+l_bn]
-                puts "#{s_bn} => #{s_bu}"
-            end
+#		$stderr.puts "#{databases[pos]} #{f_t}"
+        if "Browser Bookmarks" == dbname then
+            # TODO this should be in the bookmarks class, maybe
+            IPD::Bookmarks.handle_record(f_t, f_d)
+###            if f_t == 17 then # bookmark name
+###                bits = f_d[0..7]
+###                rest = f_d[8..-1]
+####                puts "type of bookmark: #{bits[0]}"
+###                if bits[0] & 0x40 == 0x40 then 
+###                    rest = f_d[7..-1]
+###                end
+###                l_bn = rest[0..1].unpack('n')[0]
+###                s_bn = rest[2..1+l_bn]
+####                puts "#{l_bn} => #{s_bn}"
+###                bm = IPD::Bookmark.new()
+###                bm.name = s_bn
+###            elsif f_t == 18 then # bookmark URL
+###                l_bn = f_d[0..1].unpack('n')[0]
+###                s_bu = f_d[2..1+l_bn]
+###                bm.url = s_bu
+###                puts "#{bm}"
+###            end
         end
 		if pos == 1 then
 			if f_t == 105 then
@@ -78,3 +87,8 @@ loop do
 		end
 	end	
 end
+rescue => e
+end
+
+puts "BOOKMARKS:"
+puts IPD::Bookmarks.bookmarks
