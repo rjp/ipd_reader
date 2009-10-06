@@ -25,6 +25,7 @@ module IPD
             when 1
                 @@current = IPD::SMS.new
                 @@sms.push @@current
+                @@current.date = Time.at(f_d[13..20].unpack('Q')[0]/1000)
             when 11
                 a, b = f_d.unpack('S2')
                 @@current.direction = a
