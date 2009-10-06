@@ -42,15 +42,31 @@ loop do
 	data = ipd.sysread(db_l)
 	db_v, db_rh, db_id, fields = data.unpack('CSLa*')
 	if pos == 26 then
-	puts "block is [#{pos}] = #{databases[pos]}, length=#{db_l}, version=#{db_v} id=#{db_id}"
+#	puts "block is [#{pos}] = #{databases[pos]}, length=#{db_l}, version=#{db_v} id=#{db_id}"
 	end
 
+    s_bn = ''
 	while fields.length > 0 do
 		f_l, f_t, fields = fields.unpack('SCa*')
 		f_d, fields = fields.unpack("a#{f_l}a*")
-		if pos == 26 then
-		puts "  f=#{f_l}, f_t=#{f_t} d=#{f_d.inspect}"
-		end
+		puts "#{databases[pos]} #{f_t}"
+        if pos == 85 then
+            if f_t == 17 then # bookmark name
+                bits = f_d[0..7]
+                rest = f_d[8..-1]
+#                puts "type of bookmark: #{bits[0]}"
+                if bits[0] & 0x40 == 0x40 then 
+                    rest = f_d[7..-1]
+                end
+                l_bn = rest[0..1].unpack('n')[0]
+                s_bn = rest[2..1+l_bn]
+#                puts "#{l_bn} => #{s_bn}"
+            elsif f_t == 18 then # bookmark URL
+                l_bn = f_d[0..1].unpack('n')[0]
+                s_bu = f_d[2..1+l_bn]
+                puts "#{s_bn} => #{s_bu}"
+            end
+        end
 		if pos == 1 then
 			if f_t == 105 then
 				mms_file = mms_file || File.open("mms_#{mms}", 'w')
