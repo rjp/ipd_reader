@@ -1,4 +1,5 @@
 require 'ipd/bookmark'
+require 'ipd/sms'
 
 identifier = 'Inter@ctive Pager Backup/Restore File'
 
@@ -57,6 +58,11 @@ loop do
         if "Browser Bookmarks" == dbname then
             IPD::Bookmarks.handle_record(f_t, f_d)
         end
+
+        if "SMS Messages" == dbname then
+            IPD::SMSList.handle_record(f_t, f_d)
+        end
+
 		if pos == 1 then
 			if f_t == 105 then
 				mms_file = mms_file || File.open("mms_#{mms}", 'w')
@@ -69,7 +75,11 @@ loop do
 	end	
 end
 rescue => e
+    puts e
 end
 
 puts "BOOKMARKS:"
 puts IPD::Bookmarks.bookmarks
+
+puts "SMS:"
+puts IPD::SMSList.sms
